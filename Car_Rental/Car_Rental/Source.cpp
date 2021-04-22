@@ -2,13 +2,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
 using namespace std;
-
-class BookAndRent {
-	virtual string serviceType() = 0;
-	virtual string detailedServiceType() = 0;
-	virtual void printInformation() = 0;
-};
 
 class Driver {
 protected:
@@ -64,11 +60,19 @@ int Driver::numofDrivers = 0;
 class ServiceHistory {
 protected:
 	string serviceID;
+	int cost;
+	string garage;
 public:
-	
 
-	ServiceHistory(string serviceID)
-		: serviceID(serviceID) {};
+	ServiceHistory(string serviceID, int cost, string garage)
+		: serviceID(serviceID), cost(cost), garage(garage) {};
+
+	std::string getServiceID() const { return serviceID; }
+	void setServiceID(std::string val) { serviceID = val; }
+	int getCost() const { return cost; }
+	void setCost(int val) { cost = val; }
+	std::string getGarage() const { return garage; }
+	void setGarage(std::string val) { garage = val; }
 
 	void displayTime(string Time) {
 		cout << Time[0] << Time[1] << Time[2] << Time[3] << ":"
@@ -77,23 +81,14 @@ public:
 	}
 
 	int getServiceTime() {
-		if (serviceID == "")
+		if (getServiceID() == "")
 			return 0;
-		return stoi(serviceID);
+		return stoi(getServiceID());
 	}
 
-	std::string getServiceID() const { return serviceID; }
-	void setServiceID(std::string val) { serviceID = val; }
-
-	virtual string serviceType() {
-		return "None";
-	}
-	virtual string detailedServiceType() {
-		return "None";
-	}
-	virtual void printInformation() {
-		cout << "No Service found";
-	}
+	virtual string serviceType() = 0;
+	virtual string detailedServiceType() = 0;
+	virtual void printInformation() = 0;
 };
 
 class ServiceEngine : public ServiceHistory {
@@ -103,39 +98,47 @@ private:
 	bool major = false;
 public:
 
-
-	ServiceEngine(string serviceID)
-		: ServiceHistory(serviceID) {
+	ServiceEngine(string serviceID, int cost, string garage)
+		: ServiceHistory(serviceID, cost, garage) {
 		if (serviceID[9] == 'O')
-			this->oilChange = true;
+			this->setOilChange(true);
 		else if (serviceID[9] == 'I')
-			this->minor = true;
+			this->setMinor(true);
 		else if (serviceID[9] == 'A')
-			this->major = true;
+			this->setMajor(true);
 	}
-	
+
+	bool getOilChange() const { return oilChange; }
+	void setOilChange(bool val) { oilChange = val; }
+	bool getMinor() const { return minor; }
+	void setMinor(bool val) { minor = val; }
+	bool getMajor() const { return major; }
+	void setMajor(bool val) { major = val; }
+
 	string serviceType() {
 		return "Engine";
 	}
 
 	string detailedServiceType() {
-		if (this->oilChange)
+		if (this->getOilChange())
 			return "Oil Change";
-		else if (this->minor)
+		else if (this->getMinor())
 			return "Minor";
-		else if (this->major)
+		else if (this->getMajor())
 			return "Major";
 		return "Unknown";
 	}
 
 	void printInformation() {
 		cout << "Engine Service type: " << detailedServiceType();
-		cout << endl;
+		cout << "\t";
 		cout << "Service time: ";
-		this->displayTime(serviceID);
+		this->displayTime(getServiceID());
+		cout << endl;
+		cout << "Maintainence cost: " << this->getCost() << endl;
+		cout << "Maintainence garage: " << this->getGarage() << endl;
 		cout << endl;
 	}
-
 };
 
 class ServiceTransmission : public ServiceHistory {
@@ -144,36 +147,46 @@ private:
 	bool minor = false;
 	bool overhaul = false;
 public:
-	
-	ServiceTransmission(string serviceID)
-		: ServiceHistory(serviceID) {
+
+	ServiceTransmission(string serviceID, int cost, string garage)
+		: ServiceHistory(serviceID, cost, garage) {
 		if (serviceID[9] == 'F')
-			this->fluidChange = true;
+			this->setFluidChange(true);
 		else if (serviceID[9] == 'M')
-			this->minor = true;
+			this->setMinor(true);
 		else if (serviceID[9] == 'O')
-			this->overhaul = true;
+			this->setOverhaul(true);
 	}
+
+	bool getFluidChange() const { return fluidChange; }
+	void setFluidChange(bool val) { fluidChange = val; }
+	bool getMinor() const { return minor; }
+	void setMinor(bool val) { minor = val; }
+	bool getOverhaul() const { return overhaul; }
+	void setOverhaul(bool val) { overhaul = val; }
 
 	string serviceType() {
 		return "Transmission";
 	}
 
 	string detailedServiceType() {
-		if (this->fluidChange)
+		if (this->getFluidChange())
 			return "Fluid Change";
-		else if (this->minor)
+		else if (this->getMinor())
 			return "Minor";
-		else if (this->overhaul)
+		else if (this->getOverhaul())
 			return "Overhaul";
 		return "Unknown";
 	}
 
 	void printInformation() {
 		cout << "Transmission Service type: " << detailedServiceType();
-		cout << endl;
+		cout << "\t";
 		cout << "Service time: ";
-		this->displayTime(serviceID);
+		this->displayTime(getServiceID());
+		cout << endl;
+		cout << "Maintainence cost: " << this->getCost() << endl;
+		cout << "Maintainence garage: " << this->getGarage() << endl;
 		cout << endl;
 	}
 };
@@ -184,31 +197,39 @@ private:
 	bool replacement = false;
 public:
 
-	ServiceTire(string serviceID)
-		: ServiceHistory(serviceID) {
+	ServiceTire(string serviceID, int cost, string garage)
+		: ServiceHistory(serviceID, cost, garage) {
 		if (serviceID[9] == 'A')
-			this->adjusment = true;
+			this->setAdjusment(true);
 		else if (serviceID[9] == 'R')
-			this->replacement = true;
+			this->setReplacement(true);
 	}
+
+	bool getAdjusment() const { return adjusment; }
+	void setAdjusment(bool val) { adjusment = val; }
+	bool getReplacement() const { return replacement; }
+	void setReplacement(bool val) { replacement = val; }
 
 	string serviceType() {
 		return "Tire";
 	}
 
 	string detailedServiceType() {
-		if (this->adjusment)
+		if (this->getAdjusment())
 			return "Adjustment";
-		else if (this->replacement)
+		else if (this->getReplacement())
 			return "Replacement";
 		return "Unknown";
 	}
 
 	void printInformation() {
 		cout << "Tire Service type: " << detailedServiceType();
-		cout << endl;
+		cout << "\t";
 		cout << "Service time: ";
-		this->displayTime(serviceID);
+		this->displayTime(getServiceID());
+		cout << endl;
+		cout << "Maintainence cost: " << this->getCost() << endl;
+		cout << "Maintainence garage: " << this->getGarage() << endl;
 		cout << endl;
 	}
 };
@@ -226,13 +247,11 @@ public:
 	{
 		Vehicle::numOfCars++;
 	};
-	Vehicle(vector<string> serviceHistory, string color, int year_release)
-		: color(color), year_release(year_release)
+	Vehicle(vector<ServiceHistory*> serviceRecord, string color, int year_release)
+		: serviceRecord(serviceRecord), color(color), year_release(year_release)
 	{
-		organizeService(serviceHistory);
 		Vehicle::numOfCars++;
 	};
-
 
 
 	static void show_option() {
@@ -242,25 +261,24 @@ public:
 		cout << "\t\t 3. luxury car" << endl;
 	}
 
-	void organizeService(vector<string> serviceVector) {
-		for (unsigned int i = 0; i < serviceVector.size(); i++) {
-			if (serviceVector[i][8] == 'E') {
-				ServiceEngine* newData = new ServiceEngine(serviceVector[i]);
-				serviceRecord.push_back(newData);
-			}
-			else if (serviceVector[i][8] == 'T') {
-				ServiceTransmission* newData = new ServiceTransmission(serviceVector[i]);
-				serviceRecord.push_back(newData);
-			}
-			else if (serviceVector[i][8] == 'W') {
-				ServiceTire* newData = new ServiceTire(serviceVector[i]);
-				serviceRecord.push_back(newData);
-			}
-		}
-	}
+	//void organizeService(vector<string> serviceVector) {
+	//	for (unsigned int i = 0; i < serviceVector.size(); i++) {
+	//		if (serviceVector[i][8] == 'E') {
+	//			ServiceEngine* newData = new ServiceEngine(serviceVector[i]);
+	//			serviceRecord.push_back(newData);
+	//		}
+	//		else if (serviceVector[i][8] == 'T') {
+	//			ServiceTransmission* newData = new ServiceTransmission(serviceVector[i]);
+	//			serviceRecord.push_back(newData);
+	//		}
+	//		else if (serviceVector[i][8] == 'W') {
+	//			ServiceTire* newData = new ServiceTire(serviceVector[i]);
+	//			serviceRecord.push_back(newData);
+	//		}
+	//	}
+	//}
 
 	virtual void printInformation() = 0;
-
 
 	void showServiceHistory() {
 		cout << "Service History: " << endl;
@@ -277,8 +295,8 @@ public:
 	SUV(string color, int year_release)
 		: Vehicle(color, year_release) {}
 
-	SUV(vector<string> serviceHistory, string color, int year_release)
-		: Vehicle(serviceHistory, color, year_release) {}
+	SUV(vector<ServiceHistory*> serviceRecord, string color, int year_release)
+		: Vehicle(serviceRecord, color, year_release) {};
 
 	void printInformation() {
 		cout << endl << "Rent a " << color << " SUV from " << year_release << endl;
@@ -294,8 +312,8 @@ public:
 	Sedan(string color, int year_release)
 		: Vehicle(color, year_release) {}
 
-	Sedan(vector<string> serviceHistory, string color, int year_release)
-		: Vehicle(serviceHistory, color, year_release) {}
+	Sedan(vector<ServiceHistory*> serviceRecord, string color, int year_release)
+		: Vehicle(serviceRecord, color, year_release) {}
 	void printInformation() {
 		cout << endl << "Rent a " << color << " Sedan from " << year_release << endl;
 		if (this->serviceRecord.size() == 0)
@@ -310,8 +328,8 @@ public:
 	LuxuryCar(string color, int year_release)
 		: Vehicle(color, year_release) {}
 
-	LuxuryCar(vector<string> serviceHistory, string color, int year_release)
-		: Vehicle(serviceHistory, color, year_release) {};
+	LuxuryCar(vector<ServiceHistory*> serviceRecord, string color, int year_release)
+		: Vehicle(serviceRecord, color, year_release) {};
 
 	void printInformation() {
 		cout << endl << "Rent a " << color << " Luxury Car from " << year_release << endl;
@@ -363,37 +381,47 @@ public:
 int RentalContract::numOfContracts = 0;
 
 Vehicle* initVehicle(string carName, string color, int year_release);
-Vehicle* initVehicle(vector<string> serviceHistory, string carName, string color, int year_release);
+Vehicle* initVehicle(vector<ServiceHistory*> serviceHistory, string carName, string color, int year_release);
 Driver* initCustomer(string name, string vehicle, string email, string phoneNumber, string driverLicense, string paymentMethod);
+ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceGarage);
+vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceGarage);
+
 
 int main() {
-	vector<string> car_1_service = {
-		"20190105EO",
-		"20190106TO",
-		"20201230WR",
-		"20070105EI",
-		"20060107TF",
-		"20201230WA"
+	srand(time(NULL));
+	vector<string> timeService = {
+		"20210604EO",
+		"20203011EI",
+		"20201231EW",
+		"20200228TF",
+		"20071118TM",
+		"20100907T0",
+		"19990507WA",
+		"19050101WR",
+		"20200706EI",
+		"20210619WA"
 	};
 
-	vector<string> car_2_service = {
-		"20070105EI",
-		"20060107TF",
-		"20201230WA"
-	};
-
-	vector<string> car_3_service = {
-		"20190105EA",
-		"20190106TM",
-		"20201230WR"
+	vector<string> garageService = {
+		"Paris",
+		"New York",
+		"California",
+		"Tokyo",
+		"Ho Chi Minh"
 	};
 
 	Vehicle::show_option();
+
 	Driver* driver_1 = initCustomer("Sheldon", "SUV", "0999999", "Sheldon_Copper@bazingga.biz", "pasedenaLicense999", "Credit Card");
+	vector<ServiceHistory*> car_1_service = initServiceRecord(timeService, garageService);
 	Vehicle* car_1 = initVehicle(car_1_service, "SUV", "Black", 1994);
+
 	Driver* driver_2 = initCustomer("Leonard", "Sedan", "011111", "Leonard_Hofstadter@bazingga.biz", "pasedenaLicense1", "Credit Card");
+	vector<ServiceHistory*> car_2_service = initServiceRecord(timeService, garageService);
 	Vehicle* car_2 = initVehicle(car_2_service, "Sedan", "White", 1969);
-	Driver* driver_3 = initCustomer("Sheldon", "LuxuryCar", "0999999", "Penny_Hofstadter@bazingga.biz", "pasedenaLicense998", "Cash");
+
+	Driver* driver_3 = initCustomer("Penny", "LuxuryCar", "0999999", "Penny_Hofstadter@bazingga.biz", "pasedenaLicense998", "Cash");
+	vector<ServiceHistory*> car_3_service = initServiceRecord(timeService, garageService);
 	Vehicle* car_3 = initVehicle("LuxuryCar", "Red", 2021);
 
 	RentalContract* contractSheldon = new RentalContract(driver_1, car_1, 1, "Texas", "02:08:2021", "04:08:2021");
@@ -409,7 +437,6 @@ int main() {
 };
 
 Vehicle* initVehicle(string carName, string color, int year_release) {
-
 	Vehicle* newCar;
 	if (carName == "SUV")
 		newCar = new SUV(color, year_release);
@@ -422,7 +449,7 @@ Vehicle* initVehicle(string carName, string color, int year_release) {
 	return newCar;
 }
 
-Vehicle* initVehicle(vector<string> serviceHistory, string carName, string color, int year_release) {
+Vehicle* initVehicle(vector<ServiceHistory*> serviceHistory, string carName, string color, int year_release) {
 	Vehicle* newCar;
 	if (carName == "SUV")
 		newCar = new SUV(serviceHistory, color, year_release);
@@ -437,4 +464,28 @@ Vehicle* initVehicle(vector<string> serviceHistory, string carName, string color
 Driver* initCustomer(string name, string vehicle, string phoneNumber, string email, string driverLicense, string paymentMethod) {
 	Driver* driver = new Driver(name, vehicle, phoneNumber, email, driverLicense, paymentMethod);
 	return driver;
+}
+
+ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceGarage) {
+	string timeM = maintanenceTime[rand() % 10];
+	int cost = rand() % 8999 + 1000;
+	string garageM = maintanenceGarage[rand() % 5];
+	ServiceHistory* newService;
+	if (timeM[8] == 'E')
+		newService = new ServiceEngine(timeM, cost, garageM);
+	else if (timeM[8] == 'T')
+		newService = new ServiceTransmission(timeM, cost, garageM);
+	else 
+		newService = new ServiceTire(timeM, cost, garageM);
+
+	return newService;
+}
+
+std::vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceGarage)
+{
+	vector<ServiceHistory*> serviceRecord;
+	for (int i = 0; i < (rand() % 5 + 9); i++) {
+		serviceRecord.push_back(initService(maintanenceTime, maintanenceGarage));
+	}
+	return serviceRecord;
 }
