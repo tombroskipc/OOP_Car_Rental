@@ -4,7 +4,11 @@
 #include <algorithm>
 using namespace std;
 
-
+class BookAndRent {
+	virtual string serviceType() = 0;
+	virtual string detailedServiceType() = 0;
+	virtual void printInformation() = 0;
+};
 
 class Driver {
 protected:
@@ -81,9 +85,15 @@ public:
 	std::string getServiceID() const { return serviceID; }
 	void setServiceID(std::string val) { serviceID = val; }
 
-	virtual string serviceType() = 0;
-	virtual string detailedServiceType() = 0;
-	virtual void printInformation() = 0;
+	virtual string serviceType() {
+		return "None";
+	}
+	virtual string detailedServiceType() {
+		return "None";
+	}
+	virtual void printInformation() {
+		cout << "No Service found";
+	}
 };
 
 class ServiceEngine : public ServiceHistory {
@@ -207,7 +217,7 @@ class Vehicle {
 protected:
 	string color;
 	int year_release;
-	vector<ServiceHistory> serviceRecord;
+	vector<ServiceHistory*> serviceRecord;
 
 public:
 	static int numOfCars;
@@ -223,8 +233,7 @@ public:
 		Vehicle::numOfCars++;
 	};
 
-	std::vector<ServiceHistory> getServiceRecord() const { return serviceRecord; }
-	void setServiceRecord(std::vector<ServiceHistory> val) { serviceRecord = val; }
+
 
 	static void show_option() {
 		cout << "\tDifferent options " << endl;
@@ -235,12 +244,18 @@ public:
 
 	void organizeService(vector<string> serviceVector) {
 		for (unsigned int i = 0; i < serviceVector.size(); i++) {
-			if (serviceVector[i][8] == 'E')
-				serviceRecord.push_back(ServiceEngine(serviceVector[i]));
-			else if (serviceVector[i][8] == 'T')
-				serviceRecord.push_back(ServiceTransmission(serviceVector[i]));
-			else if (serviceVector[i][8] == 'W')
-				serviceRecord.push_back(ServiceTire(serviceVector[i]));
+			if (serviceVector[i][8] == 'E') {
+				ServiceEngine* newData = new ServiceEngine(serviceVector[i]);
+				serviceRecord.push_back(newData);
+			}
+			else if (serviceVector[i][8] == 'T') {
+				ServiceTransmission* newData = new ServiceTransmission(serviceVector[i]);
+				serviceRecord.push_back(newData);
+			}
+			else if (serviceVector[i][8] == 'W') {
+				ServiceTire* newData = new ServiceTire(serviceVector[i]);
+				serviceRecord.push_back(newData);
+			}
 		}
 	}
 
@@ -250,7 +265,7 @@ public:
 	void showServiceHistory() {
 		cout << "Service History: " << endl;
 		for (unsigned int i = 0; i < serviceRecord.size(); i++)
-			serviceRecord[i].printInformation();
+			serviceRecord[i]->printInformation();
 	}
 };
 int Vehicle::numOfCars = 0;
@@ -401,7 +416,7 @@ Vehicle* initVehicle(string carName, string color, int year_release) {
 	else if (carName == "Sedan") {
 		newCar = new Sedan(color, year_release);
 	}
-	else if (carName == "LuxuryCar")
+	else
 		newCar = new LuxuryCar(color, year_release);
 
 	return newCar;
@@ -410,11 +425,11 @@ Vehicle* initVehicle(string carName, string color, int year_release) {
 Vehicle* initVehicle(vector<string> serviceHistory, string carName, string color, int year_release) {
 	Vehicle* newCar;
 	if (carName == "SUV")
-		SUV* newCar = new SUV(serviceHistory, color, year_release);
+		newCar = new SUV(serviceHistory, color, year_release);
 	else if (carName == "Sedan")
-		Sedan* newCar = new Sedan(serviceHistory, color, year_release);
-	else if (carName == "LuxuryCar")
-		LuxuryCar* newCar = new LuxuryCar(serviceHistory, color, year_release);
+		newCar = new Sedan(serviceHistory, color, year_release);
+	else
+		newCar = new LuxuryCar(serviceHistory, color, year_release);
 
 	return newCar;
 }
