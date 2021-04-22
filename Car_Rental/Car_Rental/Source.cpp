@@ -62,10 +62,11 @@ protected:
 	string serviceID;
 	int cost;
 	string garage;
+	int miles;
 public:
 
-	ServiceHistory(string serviceID, int cost, string garage)
-		: serviceID(serviceID), cost(cost), garage(garage) {};
+	ServiceHistory(string serviceID, int cost, string garage, int miles)
+		: serviceID(serviceID), cost(cost), garage(garage), miles(miles) {};
 
 	std::string getServiceID() const { return serviceID; }
 	void setServiceID(std::string val) { serviceID = val; }
@@ -73,6 +74,8 @@ public:
 	void setCost(int val) { cost = val; }
 	std::string getGarage() const { return garage; }
 	void setGarage(std::string val) { garage = val; }
+	int getMiles() const { return miles; }
+	void setMiles(int val) { miles = val; }
 
 	void displayTime(string Time) {
 		cout << Time[0] << Time[1] << Time[2] << Time[3] << ":"
@@ -98,8 +101,8 @@ private:
 	bool major = false;
 public:
 
-	ServiceEngine(string serviceID, int cost, string garage)
-		: ServiceHistory(serviceID, cost, garage) {
+	ServiceEngine(string serviceID, int cost, string garage, int miles)
+		: ServiceHistory(serviceID, cost, garage, miles) {
 		if (serviceID[9] == 'O')
 			this->setOilChange(true);
 		else if (serviceID[9] == 'I')
@@ -137,6 +140,7 @@ public:
 		cout << endl;
 		cout << "Maintainence cost: " << this->getCost() << endl;
 		cout << "Maintainence garage: " << this->getGarage() << endl;
+		cout << "Miles traveled at Maintainence time: " << this->getMiles() << endl;
 		cout << endl;
 	}
 };
@@ -148,8 +152,8 @@ private:
 	bool overhaul = false;
 public:
 
-	ServiceTransmission(string serviceID, int cost, string garage)
-		: ServiceHistory(serviceID, cost, garage) {
+	ServiceTransmission(string serviceID, int cost, string garage, int miles)
+		: ServiceHistory(serviceID, cost, garage, miles) {
 		if (serviceID[9] == 'F')
 			this->setFluidChange(true);
 		else if (serviceID[9] == 'M')
@@ -187,6 +191,7 @@ public:
 		cout << endl;
 		cout << "Maintainence cost: " << this->getCost() << endl;
 		cout << "Maintainence garage: " << this->getGarage() << endl;
+		cout << "Miles traveled at Maintainence time: " << this->getMiles() << endl;
 		cout << endl;
 	}
 };
@@ -197,8 +202,8 @@ private:
 	bool replacement = false;
 public:
 
-	ServiceTire(string serviceID, int cost, string garage)
-		: ServiceHistory(serviceID, cost, garage) {
+	ServiceTire(string serviceID, int cost, string garage, int miles)
+		: ServiceHistory(serviceID, cost, garage, miles) {
 		if (serviceID[9] == 'A')
 			this->setAdjusment(true);
 		else if (serviceID[9] == 'R')
@@ -230,6 +235,7 @@ public:
 		cout << endl;
 		cout << "Maintainence cost: " << this->getCost() << endl;
 		cout << "Maintainence garage: " << this->getGarage() << endl;
+		cout << "Miles traveled at Maintainence time: " << this->getMiles() << endl;
 		cout << endl;
 	}
 };
@@ -392,10 +398,10 @@ int main() {
 	vector<string> timeService = {
 		"20210604EO",
 		"20203011EI",
-		"20201231EW",
+		"20201231EA",
 		"20200228TF",
 		"20071118TM",
-		"20100907T0",
+		"20100907TO",
 		"19990507WA",
 		"19050101WR",
 		"20200706EI",
@@ -470,13 +476,14 @@ ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maint
 	string timeM = maintanenceTime[rand() % 10];
 	int cost = rand() % 8999 + 1000;
 	string garageM = maintanenceGarage[rand() % 5];
+	int milesM = stoi(timeM);
 	ServiceHistory* newService;
 	if (timeM[8] == 'E')
-		newService = new ServiceEngine(timeM, cost, garageM);
+		newService = new ServiceEngine(timeM, cost, garageM, milesM);
 	else if (timeM[8] == 'T')
-		newService = new ServiceTransmission(timeM, cost, garageM);
+		newService = new ServiceTransmission(timeM, cost, garageM, milesM);
 	else 
-		newService = new ServiceTire(timeM, cost, garageM);
+		newService = new ServiceTire(timeM, cost, garageM, milesM);
 
 	return newService;
 }
