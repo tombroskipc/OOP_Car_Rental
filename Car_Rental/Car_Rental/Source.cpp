@@ -64,9 +64,11 @@ protected:
 	string garage;
 	int miles;
 public:
-
+	static int numofService;
 	ServiceHistory(string serviceID, int cost, string garage, int miles)
-		: serviceID(serviceID), cost(cost), garage(garage), miles(miles) {};
+		: serviceID(serviceID), cost(cost), garage(garage), miles(miles) {
+		ServiceHistory::numofService++;
+	};
 
 	std::string getServiceID() const { return serviceID; }
 	void setServiceID(std::string val) { serviceID = val; }
@@ -93,6 +95,7 @@ public:
 	virtual string detailedServiceType() = 0;
 	virtual void printInformation() = 0;
 };
+int ServiceHistory::numofService = 0;
 
 class ServiceEngine : public ServiceHistory {
 private:
@@ -245,20 +248,50 @@ protected:
 	string color;
 	int year_release;
 	vector<ServiceHistory*> serviceRecord;
-
+	int numberOfService;
 public:
 	static int numOfCars;
 	Vehicle(string color, int year_release)
 		: color(color), year_release(year_release)
 	{
 		Vehicle::numOfCars++;
+		ServiceHistory::numofService = 0;
 	};
+
+	Vehicle(ServiceHistory* serviceRecord, string color, int year_release)
+		: color(color), year_release(year_release)
+	{
+		ServiceHistory::numofService = 0;
+		this->setNumberOfService(ServiceHistory::numofService);
+		Vehicle::numOfCars++;
+		this->getServiceRecord().push_back(serviceRecord);
+	};
+
 	Vehicle(vector<ServiceHistory*> serviceRecord, string color, int year_release)
 		: serviceRecord(serviceRecord), color(color), year_release(year_release)
 	{
+		this->setNumberOfService(ServiceHistory::numofService);
+		ServiceHistory::numofService = 0;
+		this->setServiceRecord(serviceRecord);
 		Vehicle::numOfCars++;
+		int i, j;
+		for (i = 0; i < this->getServiceRecord().size() - 2; i++)
+			for (j = 0; j < this->getServiceRecord().size() - i - 1; j++)
+				if (this->getServiceRecord()[j]->getMiles() > this->getServiceRecord()[j + 1]->getMiles()) {
+					ServiceHistory* temp = this->getServiceRecord()[j + 1];
+					this->getServiceRecord()[j + 1] = this->getServiceRecord()[j];
+					this->getServiceRecord()[j] = temp;
+				}
 	};
 
+	std::string getColor() const { return color; }
+	void setColor(std::string val) { color = val; }
+	int getYear_release() const { return year_release; }
+	void setYear_release(int val) { year_release = val; }
+	std::vector<ServiceHistory*> getServiceRecord() const { return serviceRecord; }
+	void setServiceRecord(std::vector<ServiceHistory*> val) { serviceRecord = val; }
+	int getNumberOfService() const { return numberOfService; }
+	void setNumberOfService(int val) { numberOfService = val; }
 
 	static void show_option() {
 		cout << "\tDifferent options " << endl;
@@ -267,29 +300,13 @@ public:
 		cout << "\t\t 3. luxury car" << endl;
 	}
 
-	//void organizeService(vector<string> serviceVector) {
-	//	for (unsigned int i = 0; i < serviceVector.size(); i++) {
-	//		if (serviceVector[i][8] == 'E') {
-	//			ServiceEngine* newData = new ServiceEngine(serviceVector[i]);
-	//			serviceRecord.push_back(newData);
-	//		}
-	//		else if (serviceVector[i][8] == 'T') {
-	//			ServiceTransmission* newData = new ServiceTransmission(serviceVector[i]);
-	//			serviceRecord.push_back(newData);
-	//		}
-	//		else if (serviceVector[i][8] == 'W') {
-	//			ServiceTire* newData = new ServiceTire(serviceVector[i]);
-	//			serviceRecord.push_back(newData);
-	//		}
-	//	}
-	//}
-
 	virtual void printInformation() = 0;
 
 	void showServiceHistory() {
 		cout << "Service History: " << endl;
-		for (unsigned int i = 0; i < serviceRecord.size(); i++)
-			serviceRecord[i]->printInformation();
+		for (unsigned int i = 0; i < getServiceRecord().size(); i++)
+			getServiceRecord()[i]->printInformation();
+		cout << "Number of service: " << this->getNumberOfService() << endl;
 	}
 };
 int Vehicle::numOfCars = 0;
@@ -305,8 +322,8 @@ public:
 		: Vehicle(serviceRecord, color, year_release) {};
 
 	void printInformation() {
-		cout << endl << "Rent a " << color << " SUV from " << year_release << endl;
-		if (this->serviceRecord.size() == 0)
+		cout << endl << "Rent a " << getColor() << " SUV from " << getYear_release() << endl;
+		if (this->getServiceRecord().size() == 0)
 			cout << "This car has never been Maintained";
 		else
 			this->showServiceHistory();
@@ -321,8 +338,8 @@ public:
 	Sedan(vector<ServiceHistory*> serviceRecord, string color, int year_release)
 		: Vehicle(serviceRecord, color, year_release) {}
 	void printInformation() {
-		cout << endl << "Rent a " << color << " Sedan from " << year_release << endl;
-		if (this->serviceRecord.size() == 0)
+		cout << endl << "Rent a " << getColor() << " Sedan from " << getYear_release() << endl;
+		if (this->getServiceRecord().size() == 0)
 			cout << "This car has never been Maintained";
 		else
 			this->showServiceHistory();
@@ -338,8 +355,8 @@ public:
 		: Vehicle(serviceRecord, color, year_release) {};
 
 	void printInformation() {
-		cout << endl << "Rent a " << color << " Luxury Car from " << year_release << endl;
-		if (this->serviceRecord.size() == 0)
+		cout << endl << "Rent a " << getColor() << " Luxury Car from " << getYear_release() << endl;
+		if (this->getServiceRecord().size() == 0)
 			cout << "This car has never been Maintained";
 		else
 			this->showServiceHistory();
@@ -391,7 +408,6 @@ Vehicle* initVehicle(vector<ServiceHistory*> serviceHistory, string carName, str
 Driver* initCustomer(string name, string vehicle, string email, string phoneNumber, string driverLicense, string paymentMethod);
 ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceGarage);
 vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceGarage);
-
 
 int main() {
 	srand(time(NULL));
@@ -482,7 +498,7 @@ ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maint
 		newService = new ServiceEngine(timeM, cost, garageM, milesM);
 	else if (timeM[8] == 'T')
 		newService = new ServiceTransmission(timeM, cost, garageM, milesM);
-	else 
+	else
 		newService = new ServiceTire(timeM, cost, garageM, milesM);
 
 	return newService;
