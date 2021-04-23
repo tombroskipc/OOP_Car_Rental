@@ -103,13 +103,13 @@ public:
 		string car2_str = "";
 		int car1_int = 0;
 		int car2_int = 0;
-		for (int i = 0; i < this->getServiceID().size(); i++) {
+		for (unsigned int i = 0; i < this->getServiceID().size(); i++) {
 			if (this->getServiceID()[i] == '_')
 				break;
 			car1_str += this->getServiceID()[i];
 		}
 
-		for (int i = 0; i < b.getServiceID().size(); i++) {
+		for (unsigned int i = 0; i < b.getServiceID().size(); i++) {
 			if (b.getServiceID()[i] == '_')
 				break;
 			car2_str += b.getServiceID()[i];
@@ -121,7 +121,7 @@ public:
 		return false;
 	}
 
-	int operator-(ServiceHistory &b) {
+	int operator-(ServiceHistory& b) {
 		int result = 999;
 		if (*this == b) {
 			result = abs(this->getMiles() - b.getMiles());
@@ -141,7 +141,6 @@ public:
 		}
 		return -999;
 	}
-
 };
 int ServiceHistory::numofService = 0;
 
@@ -304,6 +303,7 @@ public:
 	{
 		Vehicle::numOfCars++;
 		ServiceHistory::numofService = 0;
+		this->setNumberOfService(0);
 	};
 
 	Vehicle(ServiceHistory* serviceRecord, string color, int year_release)
@@ -313,6 +313,7 @@ public:
 		this->setNumberOfService(ServiceHistory::numofService);
 		Vehicle::numOfCars++;
 		this->getServiceRecord().push_back(serviceRecord);
+		this->setNumberOfService(1);
 	};
 
 	Vehicle(vector<ServiceHistory*> serviceRecord, string color, int year_release)
@@ -320,13 +321,13 @@ public:
 	{
 		this->setNumberOfService(ServiceHistory::numofService);
 		ServiceHistory::numofService = 0;
-		for (int i = 0; i < serviceRecord.size(); i++)
+		for (unsigned int i = 0; i < serviceRecord.size(); i++)
 			serviceRecord[i]->setServiceID(generateServiceID(serviceRecord[i]));
 
 		this->setServiceRecord(serviceRecord);
 		Vehicle::numOfCars++;
 
-		int i, j;
+		unsigned int i, j;
 		for (i = 0; i < this->getServiceRecord().size() - 2; i++) {
 			for (j = 0; j < this->getServiceRecord().size() - i - 1; j++) {
 				if (this->getServiceRecord()[j]->getMiles() > this->getServiceRecord()[j + 1]->getMiles()) {
@@ -336,8 +337,6 @@ public:
 				}
 			}
 		}
-
-
 	};
 
 	std::string getColor() const { return color; }
@@ -376,8 +375,6 @@ public:
 			getServiceRecord()[i]->printInformation();
 		cout << "Number of service: " << this->getNumberOfService() << endl;
 	}
-
-
 };
 int Vehicle::numOfCars = 0;
 
@@ -473,25 +470,45 @@ public:
 };
 int RentalContract::numOfContracts = 0;
 
+string generateServiceCode(vector<string> serviceTime, vector<string> serviceType);
+
 Vehicle* initVehicle(string carName, string color, int year_release);
 Vehicle* initVehicle(vector<ServiceHistory*> serviceHistory, string carName, string color, int year_release);
 Driver* initCustomer(string name, string vehicle, string email, string phoneNumber, string driverLicense, string paymentMethod);
-ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceGarage);
-vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceGarage);
+ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceType, vector<string> maintanenceGarage);
+vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceType, vector<string> maintanenceGarage);
 
 int main() {
 	srand(time(NULL));
+	vector<string> typeService = {
+		"EO", "EI", "EA", "TF", "TM", "TO", "WA", "WR"
+	};
 	vector<string> timeService = {
-		"20210604EO",
-		"20203011EI",
-		"20201231EA",
-		"20200228TF",
-		"20071118TM",
-		"20100907TO",
-		"19990507WA",
-		"19050101WR",
-		"20200706EI",
-		"20210619WA"
+		"20150508",
+		"20160119",
+		"20160127",
+		"20160222",
+		"20160509",
+		"20160516",
+		"20160812",
+		"20160906",
+		"20161207",
+		"20170125",
+		"20170501",
+		"20170720",
+		"20170915",
+		"20170918",
+		"20171116",
+		"20190122",
+		"20190531",
+		"20190722",
+		"20191011",
+		"20191113",
+		"20200122",
+		"20200608",
+		"20200810",
+		"20201013",
+		"20201125"
 	};
 
 	vector<string> garageService = {
@@ -505,15 +522,15 @@ int main() {
 	Vehicle::show_option();
 
 	Driver* driver_1 = initCustomer("Sheldon", "SUV", "0999999", "Sheldon_Copper@bazingga.biz", "pasedenaLicense999", "Credit Card");
-	vector<ServiceHistory*> car_1_service = initServiceRecord(timeService, garageService);
+	vector<ServiceHistory*> car_1_service = initServiceRecord(timeService, typeService, garageService);
 	Vehicle* car_1 = initVehicle(car_1_service, "SUV", "Black", 1994);
 
 	Driver* driver_2 = initCustomer("Leonard", "Sedan", "011111", "Leonard_Hofstadter@bazingga.biz", "pasedenaLicense1", "Credit Card");
-	vector<ServiceHistory*> car_2_service = initServiceRecord(timeService, garageService);
+	vector<ServiceHistory*> car_2_service = initServiceRecord(timeService, typeService, garageService);
 	Vehicle* car_2 = initVehicle(car_2_service, "Sedan", "White", 1969);
 
 	Driver* driver_3 = initCustomer("Penny", "LuxuryCar", "0999999", "Penny_Hofstadter@bazingga.biz", "pasedenaLicense998", "Cash");
-	vector<ServiceHistory*> car_3_service = initServiceRecord(timeService, garageService);
+	vector<ServiceHistory*> car_3_service = initServiceRecord(timeService, typeService, garageService);
 	Vehicle* car_3 = initVehicle("LuxuryCar", "Red", 2021);
 
 	RentalContract* contractSheldon = new RentalContract(driver_1, car_1, 1, "Texas", "02:08:2021", "04:08:2021");
@@ -531,7 +548,7 @@ int main() {
 	int service1 = 2;
 	int service2 = 3;
 	int miles2Service = *(car_1->getServiceHistory(service2)) - *(car_1->getServiceHistory(service1));
-	cout << "Miles between service 2 and 3 of car 1: "  << miles2Service << endl;
+	cout << "Miles between service 2 and 3 of car 1: " << miles2Service << endl;
 	cout << "Actual:                                 " << car_1->getServiceHistory(service2)->getMiles() - car_1->getServiceHistory(service1)->getMiles() << endl;
 	cout << endl;
 	int compasison = *(car_1->getServiceHistory(service1)) = *(car_1->getServiceHistory(service2));
@@ -544,7 +561,6 @@ int main() {
 	else
 		cout << "2 Service not done on the same car";
 	cout << endl;
-
 };
 
 Vehicle* initVehicle(string carName, string color, int year_release) {
@@ -576,8 +592,8 @@ Driver* initCustomer(string name, string vehicle, string phoneNumber, string ema
 	return driver;
 }
 
-ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceGarage) {
-	string timeM = maintanenceTime[rand() % 10];
+ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maintanenceType, vector<string> maintanenceGarage) {
+	string timeM = generateServiceCode(maintanenceTime, maintanenceType);
 	int cost = rand() % 8999 + 1000;
 	string garageM = maintanenceGarage[rand() % 5];
 	int milesM = stoi(timeM);
@@ -592,11 +608,16 @@ ServiceHistory* initService(vector<string> maintanenceTime, vector<string> maint
 	return newService;
 }
 
-std::vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceGarage)
+std::vector<ServiceHistory*> initServiceRecord(vector<string> maintanenceTime, vector<string> maintanenceType, vector<string> maintanenceGarage)
 {
 	vector<ServiceHistory*> serviceRecord;
-	for (int i = 0; i < (rand() % 5 + 9); i++) {
-		serviceRecord.push_back(initService(maintanenceTime, maintanenceGarage));
-	}
+	for (int i = 0; i < (rand() % 5 + 9); i++)
+		serviceRecord.push_back(initService(maintanenceTime, maintanenceType, maintanenceGarage));
 	return serviceRecord;
+}
+
+string generateServiceCode(vector<string> serviceTime, vector<string> serviceType) {
+	string timeE = serviceTime[rand() % 25];
+	string typeE = serviceType[rand() % 8];
+	return timeE + typeE;
 }
