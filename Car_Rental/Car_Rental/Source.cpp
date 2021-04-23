@@ -98,11 +98,50 @@ public:
 	virtual string detailedServiceType() = 0;
 	virtual void printInformation() = 0;
 
-	int operator-(ServiceHistory &b) {
-		int result;
-		result = this->getMiles() - b.getMiles();
-		return result;
+	bool operator==(ServiceHistory& b) {
+		string car1_str = "";
+		string car2_str = "";
+		int car1_int = 0;
+		int car2_int = 0;
+		for (int i = 0; i < this->getServiceID().size(); i++) {
+			if (this->getServiceID()[i] == '_')
+				break;
+			car1_str += this->getServiceID()[i];
+		}
+
+		for (int i = 0; i < b.getServiceID().size(); i++) {
+			if (b.getServiceID()[i] == '_')
+				break;
+			car2_str += b.getServiceID()[i];
+		}
+		car1_int = stoi(car1_str);
+		car2_int = stoi(car2_str);
+		if (car1_int == car2_int)
+			return true;
+		return false;
 	}
+
+	int operator-(ServiceHistory &b) {
+		int result = 999;
+		if (*this == b) {
+			result = abs(this->getMiles() - b.getMiles());
+			return result;
+		}
+		return -999;
+	}
+
+	int operator=(ServiceHistory& b) {
+		int result = 0;
+		if (*this == b) {
+			if (this->getMiles() > b.getMiles())
+				return 1;
+			else if (this->getMiles() < b.getMiles())
+				return -1;
+			return 0;
+		}
+		return -999;
+	}
+
 };
 int ServiceHistory::numofService = 0;
 
@@ -281,16 +320,24 @@ public:
 	{
 		this->setNumberOfService(ServiceHistory::numofService);
 		ServiceHistory::numofService = 0;
+		for (int i = 0; i < serviceRecord.size(); i++)
+			serviceRecord[i]->setServiceID(generateServiceID(serviceRecord[i]));
+
 		this->setServiceRecord(serviceRecord);
 		Vehicle::numOfCars++;
+
 		int i, j;
-		for (i = 0; i < this->getServiceRecord().size() - 2; i++)
-			for (j = 0; j < this->getServiceRecord().size() - i - 1; j++)
+		for (i = 0; i < this->getServiceRecord().size() - 2; i++) {
+			for (j = 0; j < this->getServiceRecord().size() - i - 1; j++) {
 				if (this->getServiceRecord()[j]->getMiles() > this->getServiceRecord()[j + 1]->getMiles()) {
 					ServiceHistory* temp = this->getServiceHistory(j + 1);
 					this->setServiceHistory(this->getServiceHistory(j), j + 1);
 					this->setServiceHistory(temp, j);
 				}
+			}
+		}
+
+
 	};
 
 	std::string getColor() const { return color; }
@@ -306,7 +353,11 @@ public:
 	ServiceHistory* getServiceHistory(int index) { return this->getServiceRecord()[index]; }
 
 	string generateServiceID(ServiceHistory* serviceHistory) {
-		string ID = serviceHistory->getServiceID();
+		string ID = to_string(Vehicle::numOfCars) + '_';
+		ID += serviceHistory->getServiceCode() + '_';
+		ID += serviceHistory->getCost() + '_';
+		ID += serviceHistory->getGarage() + '_';
+		ID += serviceHistory->getMiles();
 		return ID;
 	}
 
@@ -445,10 +496,10 @@ int main() {
 
 	vector<string> garageService = {
 		"Paris",
-		"New York",
+		"NewYork",
 		"California",
 		"Tokyo",
-		"Ho Chi Minh"
+		"HoChiMinh"
 	};
 
 	Vehicle::show_option();
@@ -477,9 +528,23 @@ int main() {
 	cout << endl << "Number of car being rented: " << Vehicle::numOfCars;
 
 	cout << endl << endl << endl;
-	int miles2Service = *(car_1->getServiceHistory(3)) - *(car_1->getServiceHistory(2));
+	int service1 = 2;
+	int service2 = 3;
+	int miles2Service = *(car_1->getServiceHistory(service2)) - *(car_1->getServiceHistory(service1));
 	cout << "Miles between service 2 and 3 of car 1: "  << miles2Service << endl;
-	cout << "Actual:                                 " << car_1->getServiceHistory(3)->getMiles() - car_1->getServiceHistory(2)->getMiles() << endl;
+	cout << "Actual:                                 " << car_1->getServiceHistory(service2)->getMiles() - car_1->getServiceHistory(service1)->getMiles() << endl;
+	cout << endl;
+	int compasison = *(car_1->getServiceHistory(service1)) = *(car_1->getServiceHistory(service2));
+	if (compasison == 1)
+		cout << "Service 1 > Service 2";
+	else if (compasison == -1)
+		cout << "Service 1 < Service 2";
+	else if (compasison == 0)
+		cout << "Service 1 = Service 2";
+	else
+		cout << "2 Service not done on the same car";
+	cout << endl;
+
 };
 
 Vehicle* initVehicle(string carName, string color, int year_release) {
