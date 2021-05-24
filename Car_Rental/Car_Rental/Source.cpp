@@ -1,11 +1,33 @@
+#pragma warning(disable:4996)
 #include <iostream>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
+
 using namespace std;
 
+tm chronoTPtoTM(const std::chrono::system_clock::time_point& tp) {
+	time_t aux = std::chrono::system_clock::to_time_t(tp);
+	return *localtime(&aux);
+}
+std::chrono::system_clock::time_point t = std::chrono::system_clock::now();
+tm local_time = chronoTPtoTM(t);
+
+string getCurrentTimeCode()
+{
+	string finalTime = to_string(local_time.tm_year + 1900);
+	if (local_time.tm_mon + 1 < 10)
+		finalTime += '0';
+	finalTime += to_string(local_time.tm_mon + 1);
+	if (local_time.tm_mday < 10)
+		finalTime += '0';
+	finalTime += to_string(local_time.tm_mday);
+
+	return finalTime;
+}
 class Garage
 {
 private:
@@ -35,7 +57,16 @@ public:
 		cout << "Director: " << this->getDirector() << endl;
 	}
 };
-
+/**Service code
+ * 0123 - year
+ * 45 - month
+ * 67 - day
+ * 8 and 9 service code
+ * 8th (E - Engine, T - Transmission, W - Tires(Wheels))
+ * 9th Engine(O - oil change, I - minor, A - major)
+ * 9th Transmission (F - fluid change, M - minor, O - Overhaul)
+ * 9th Tires (A - adjustment, R - replacement)
+ */
 class ServiceHistory
 {
 protected:
@@ -49,6 +80,12 @@ public:
 
 	ServiceHistory(string serviceCode, int cost, Garage* garage, int miles)
 		: serviceCode(serviceCode), cost(cost), garage(garage), miles(miles)
+	{
+		numofService++;
+	};
+	
+	ServiceHistory(string serviceCode)
+		: serviceCode(serviceCode)
 	{
 		numofService++;
 	};
@@ -71,11 +108,11 @@ public:
 			<< Time[6] << Time[7];
 	}
 
-	int getServiceTime()
+	string getServiceTime()
 	{
-		if (getServiceCode() == "")
-			return 0;
-		return stoi(getServiceCode());
+		if (getServiceCode().empty())
+			return "0";
+		return getServiceCode();
 	}
 
 	virtual string serviceType() = 0;
@@ -153,6 +190,17 @@ public:
 		else if (serviceCode[9] == 'A')
 			this->setMajor(true);
 	}
+	
+	ServiceEngine(string serviceCode)
+		: ServiceHistory(serviceCode)
+	{
+		if (serviceCode[9] == 'O')
+			this->setOilChange(true);
+		else if (serviceCode[9] == 'I')
+			this->setMinor(true);
+		else if (serviceCode[9] == 'A')
+			this->setMajor(true);
+	}
 
 	bool getOilChange() const { return oilChange; }
 	void setOilChange(bool val) { oilChange = val; }
@@ -208,6 +256,17 @@ public:
 		else if (serviceCode[9] == 'O')
 			this->setOverhaul(true);
 	}
+	
+	ServiceTransmission(string serviceCode)
+		: ServiceHistory(serviceCode)
+	{
+		if (serviceCode[9] == 'F')
+			this->setFluidChange(true);
+		else if (serviceCode[9] == 'M')
+			this->setMinor(true);
+		else if (serviceCode[9] == 'O')
+			this->setOverhaul(true);
+	}
 
 	bool getFluidChange() const { return fluidChange; }
 	void setFluidChange(bool val) { fluidChange = val; }
@@ -254,6 +313,15 @@ private:
 public:
 	ServiceTire(string serviceCode, int cost, Garage* garage, int miles)
 		: ServiceHistory(serviceCode, cost, garage, miles)
+	{
+		if (serviceCode[9] == 'A')
+			this->setAdjusment(true);
+		else if (serviceCode[9] == 'R')
+			this->setReplacement(true);
+	}
+	
+	ServiceTire(string serviceCode)
+		: ServiceHistory(serviceCode)
 	{
 		if (serviceCode[9] == 'A')
 			this->setAdjusment(true);
@@ -364,6 +432,36 @@ public:
 	void setServiceHistory(ServiceHistory* service, int index) { this->serviceRecord[index] = service; }
 	ServiceHistory* getServiceHistory(int index) { return this->getServiceRecord()[index]; }
 
+	string getLastServiceEngine()
+	{
+		for (unsigned int i = getServiceRecord().size() - 1; i >= 0; i--)
+		{
+			if (getServiceHistory(i)->getServiceCode()[8] == 'E')
+				return getServiceHistory(i)->getServiceCode();
+		}
+		return "0";
+	}
+	
+	string getLastServiceTransmission()
+	{
+		for (unsigned int i = getServiceRecord().size() - 1; i >= 0; i--)
+		{
+			if (getServiceHistory(i)->getServiceCode()[8] == 'T')
+				return getServiceHistory(i)->getServiceCode();
+		}
+		return "0";
+	}
+	
+	string getLastServiceTires()
+	{
+		for (unsigned int i = getServiceRecord().size() - 1; i >= 0; i--)
+		{
+			if (getServiceHistory(i)->getServiceCode()[8] == 'W')
+				return getServiceHistory(i)->getServiceCode();
+		}
+		return "0";
+	}
+
 	string generateServiceID(ServiceHistory* serviceHistory)
 	{
 		string ID = to_string(numOfCars) + '_';
@@ -374,6 +472,36 @@ public:
 		return ID;
 	}
 
+	void addService(string serviceCode)
+	{
+		if (serviceCode[8] == 'E')
+		{
+			if (serviceCode[9] == 'O')
+				serviceRecord.push_back(new ServiceEngine(serviceCode));
+			else if (serviceCode[9] == 'I')
+				serviceRecord.push_back(new ServiceTransmission(serviceCode));
+			else if (serviceCode[9] == 'A')
+				serviceRecord.push_back(new ServiceTire(serviceCode));
+		}
+		else if (serviceCode[8] == 'T')
+		{
+			if (serviceCode[9] == 'F')
+				serviceRecord.push_back(new ServiceTransmission(serviceCode));
+			else if (serviceCode[9] == 'M')
+				serviceRecord.push_back(new ServiceTransmission(serviceCode));
+			else if (serviceCode[9] == 'O')
+				serviceRecord.push_back(new ServiceTransmission(serviceCode));
+		}
+		else if (serviceCode[8] == 'W')
+		{
+			if (serviceCode[9] == 'A')
+				serviceRecord.push_back(new ServiceTire(serviceCode));
+			else if (serviceCode[9] == 'R')
+				serviceRecord.push_back(new ServiceTire(serviceCode));
+		}
+		numberOfService++;
+	}
+	
 	virtual void printInformation() = 0;
 
 	void showServiceHistory()
@@ -478,6 +606,11 @@ public:
 		size++;
 	}
 
+	Vehicle* getVehicleHead() const { return vehicleHead; }
+	void setVehicleHead(Vehicle* val) { vehicleHead = val; }
+	int getSize() const { return size; }
+	void setSize(int val) { size = val; }
+	
 	void addCar(Vehicle* newVehicle)
 	{
 		if (!vehicleHead)
@@ -563,6 +696,7 @@ protected:
 	string email;
 	string customerLicense;
 	string paymentMethod;
+	bool isRent = false;
 
 public:
 	static int numofCustomers;
@@ -587,8 +721,10 @@ public:
 	void setCustomerLicense(std::string val) { customerLicense = val; }
 	std::string getPaymentMethod() const { return paymentMethod; }
 	void setPaymentMethod(std::string val) { paymentMethod = val; }
+	bool getIsRental() const { return isRent; }
+	void setIsRental(bool val) { isRent = val; }
 
-	void printInformation()
+	void printInformation() const
 	{
 		cout << endl;
 		cout << "Name: " << this->getCustomerName() << endl;
@@ -602,16 +738,7 @@ public:
 
 int Customer::numofCustomers = 0;
 
-/**Service code
- * 0123 - year
- * 45 - month
- * 67 - day
- * 8 and 9 service code
- * 8th (E - Engine, T - Transmission, W - Tires(Wheels))
- * 9th Engine(O - oil change, I - minor, A - major)
- * 9th Transmission (F - fluid change, M - minor, O - Overhaul)
- * 9th Tires (A - adjustment, R - replacement)
- */
+
 
 class RentalContract
 {
@@ -626,8 +753,8 @@ protected:
 public:
 	static int numOfContracts;
 
-	RentalContract(Customer* customer, int contractID, Garage* pickedUp_location, Garage* return_location,
-	               string pickUp_time, string return_time, int totalCost)
+	RentalContract(Customer* customer, int contractID, string pickUp_time, string return_time, 
+					Garage* pickedUp_location, Garage* return_location, int totalCost)
 		: customer(customer), contractID(contractID), pickedUp_location(pickedUp_location),
 		  return_location(return_location),
 		  pickUp_time(pickUp_time), return_time(return_time), totalCost(totalCost)
@@ -670,9 +797,9 @@ class BookAndRent
 {
 public:
 	virtual void bookACar(Customer*) = 0;
-	virtual void signAContract(RentalContract*) = 0;
-	virtual void signContract(string pickUpTime, string returnTime,
-	                          Garage* pickUpLocation, Garage* return_location) = 0;
+	virtual void signContract(RentalContract*) = 0;
+	virtual void signContract(Customer* customer, string pickUp_time, string return_time,
+	                          Garage* pickUp_location, Garage* return_location, int totalCost) = 0;
 };
 
 class CarRentalManagement : public BookAndRent
@@ -682,31 +809,97 @@ private:
 	vector<Customer*> customers;
 	vector<RentalContract*> contracts;
 public:
+	CarRentalManagement() {}
 	CarRentalManagement(CarFleet* carFleet)
-		: carFleet(carFleet)
-	{
-	}
-
+		: carFleet(carFleet) {}
 	CarRentalManagement(CarFleet* car_fleet, Customer* _customers)
-		: carFleet(carFleet)
-	{
-		customers.push_back(_customers);
-	}
-
+		: carFleet(carFleet) {customers.push_back(_customers);}
 	CarRentalManagement(CarFleet* car_fleet, vector<Customer*> customers)
-		: carFleet(carFleet), customers(customers)
-	{
-	}
+		: carFleet(carFleet), customers(customers) {}
 
+	CarFleet* getCarFleet() const { return carFleet; }
+	void setCarFleet(CarFleet* val) { carFleet = val; }
+	vector<Customer*> getCustomers() const { return customers; }
+	void setCustomers(vector<Customer*> val) { customers = val; }
+	vector<RentalContract*> getContracts() const { return contracts; }
+	void setContracts(vector<RentalContract*> val) { contracts = val; }
+	
 	void bookACar(Customer* customer) override { customers.push_back(customer); }
 
-	void signAContract(RentalContract* contract) override {contracts.push_back(contract);}
-
-	virtual void signContract(Customer* customer, string pickUpTime, string returnTime,
-		Garage* pickUpLocation, Garage* return_location, int totalCost)
+	void signContract(RentalContract* contract) override
 	{
-		contracts.push_back(new RentalContract(customer, RentalContract::numOfContracts + 1, pickUpLocation, return_location,
-			pickUpTime, returnTime, totalCost));
+		contract->getCustomer()->setIsRental(true);
+		contracts.push_back(contract);
+	}
+
+	int findCustomerIndex (Customer* customer)
+	{
+		for (int i = 0; i < customers.size(); i++)
+		{
+			if (customer->getCustomerName() == customers[i]->getCustomerName())
+				return i;
+		}
+		return -1;
+	}
+	
+	void signContract(Customer* customer, string pickUp_time, string return_time,
+	                          Garage* pickUp_location, Garage* return_location, int totalCost) override
+	{
+		if (findCustomerIndex(customer) == -1)
+		{
+			cout << "Customer hasn't book a car yet" << endl;
+			return;
+		}
+		customers[findCustomerIndex(customer)]->setIsRental(true);
+		contracts.push_back(new RentalContract(customer, RentalContract::numOfContracts + 1, pickUp_time, return_time,
+								pickUp_location, return_location, totalCost));
+	}
+	
+	void serviceFleet()
+	{
+		Vehicle* head = this->carFleet->getVehicleHead();
+		for (int i = 0; i < carFleet->getSize(); i++)
+		{	// if the last service time is more than 3 month so the car will get service
+			if (stoi(getCurrentTimeCode()) - stoi(head->getLastServiceEngine()) > 300)
+			{
+				head->addService(getCurrentTimeCode() + "EO");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				head->addService(getCurrentTimeCode() + "EI");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				head->addService(getCurrentTimeCode() + "EA");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				cout << "The car has been Service Engine" << endl;
+			}
+			else if (stoi(getCurrentTimeCode()) - stoi(head->getLastServiceTransmission()) > 300)
+			{
+				head->addService(getCurrentTimeCode() + "TF");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				head->addService(getCurrentTimeCode() + "TM");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				head->addService(getCurrentTimeCode() + "TO");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				cout << "The car has been Service Transmission" << endl;
+			}
+			else if (stoi(getCurrentTimeCode()) - stoi(head->getLastServiceTransmission()) > 300)
+			{
+				head->addService(getCurrentTimeCode() + "WA");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				head->addService(getCurrentTimeCode() + "WR");
+				head->getServiceHistory(head->getNumberOfService() - 1)->setCost(5000);
+				head->getServiceHistory(head->getNumberOfService() - 1)->setMiles(stoi(getCurrentTimeCode()));
+				cout << "The car has been Service Tire" << endl;
+			}
+				head = head->next;
+			
+		}
+		
 	}
 };
 
@@ -726,6 +919,9 @@ int main()
 	vector<string> typeService = {
 		"EO", "EI", "EA", "TF", "TM", "TO", "WA", "WR"
 	};
+
+	CarRentalManagement* manager = new CarRentalManagement();
+	
 	vector<string> timeService = {
 		"20150508", "20160119", "20160127", "20160222", "20160509",
 		"20160516", "20160812", "20160906", "20161207", "20170125",
@@ -751,35 +947,32 @@ int main()
 	vector<ServiceHistory*> car_2_service = initServiceRecord(timeService, typeService, garage[1]);
 	vector<ServiceHistory*> car_3_service = initServiceRecord(timeService, typeService, garage[2]);
 
-	auto carFleet = new CarFleet();
+	CarFleet* carFleet = new CarFleet();
 	carFleet->addCar(new SUV(car_1_service, "Black", 1994, 4));
 	carFleet->addCar(new Sedan(car_2_service, "White", 1969, 'B'));
 	carFleet->addCar(new LuxuryCar("Red", 2021));
 	cout << endl << "Show all available car" << endl;
 	carFleet->showAllOption();
-	vector<RentalContract*> rentalContractList;
-	vector<Customer*> customerInformation;
+	vector<Customer*> customerList;
+	customerList.push_back(initCustomer("Sheldon", carFleet->getCar(0), "0999999", "Sheldon_Copper@bazingga.biz",
+		"pasedenaLicense999", "Credit Card"));
+	customerList.push_back(initCustomer("Leonard", carFleet->getCar(1), "011111",
+		"Leonard_Hofstadter@bazingga.biz", "pasedenaLicense1", "MoMo"));
+	customerList.push_back(initCustomer("Penny", carFleet->getCar(2), "0999999", "Penny_Hofstadter@bazingga.biz",
+		"pasedenaLicense998", "Cash"));
+	
+	manager->bookACar(customerList[0]);
+	manager->bookACar(customerList[1]);
+	manager->bookACar(customerList[2]);
 
-	customerInformation.push_back(initCustomer("Sheldon", carFleet->getCar(0), "0999999", "Sheldon_Copper@bazingga.biz",
-	                                           "pasedenaLicense999", "Credit Card"));
+	manager->signContract(customerList[0], "02:08:2021", "04:08:2021", garage[1], garage[2], 2000);
+	manager->signContract(customerList[1], "03:08:2021", "05:08:2021", garage[2], garage[0], 3000);
+	manager->signContract(customerList[2], "10:08:2021", "11:08:2021", garage[0], garage[1], 5000);
 
-	customerInformation.push_back(initCustomer("Leonard", carFleet->getCar(1), "011111",
-	                                           "Leonard_Hofstadter@bazingga.biz", "pasedenaLicense1", "MoMo"));
-
-	customerInformation.push_back(initCustomer("Penny", carFleet->getCar(2), "0999999", "Penny_Hofstadter@bazingga.biz",
-	                                           "pasedenaLicense998", "Cash"));
-
-	rentalContractList.push_back(new RentalContract(customerInformation[0], 1, garage[1], garage[2], "02:08:2021",
-	                                                "04:08:2021", 2000));
-	rentalContractList.push_back(new RentalContract(customerInformation[1], 2, garage[2], garage[0], "03:08:2021",
-	                                                "05:08:2021", 3000));
-	rentalContractList.push_back(new RentalContract(customerInformation[2], 3, garage[0], garage[1], "10:08:2021",
-	                                                "11:08:2021", 5000));
-
-	rentalContractList[0]->printInformation();
-	rentalContractList[1]->printInformation();
-	rentalContractList[2]->printInformation();
-
+	manager->getContracts()[0]->printInformation();
+	manager->getContracts()[1]->printInformation();
+	manager->getContracts()[2]->printInformation();
+	manager->serviceFleet();
 	//for (int i = 0; i < 3; i++) {
 	//	cout << endl << "Service history of car: " << i << endl;
 	//	carFleet->getCar(i)->showServiceHistory();

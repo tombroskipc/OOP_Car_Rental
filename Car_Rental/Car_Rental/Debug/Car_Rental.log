@@ -1,3 +1,4 @@
 ﻿  Source.cpp
-E:\GITHUB\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(723,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Car_Rental.vcxproj -> E:\GITHUB\OOP_Car_Rental\Car_Rental\Debug\Car_Rental.exe
+D:\tung_github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(837,21): warning C4018: '<': signed/unsigned mismatch
+D:\tung_github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(918,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Car_Rental.vcxproj -> D:\tung_github\OOP_Car_Rental\Car_Rental\Debug\Car_Rental.exe
