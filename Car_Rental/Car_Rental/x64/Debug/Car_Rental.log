@@ -4,5 +4,5 @@ H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(426,1): warning C4267:
 H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(438,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(450,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(624,22): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(989,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+H:\github\OOP_Car_Rental\Car_Rental\Car_Rental\Source.cpp(998,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Car_Rental.vcxproj -> H:\github\OOP_Car_Rental\Car_Rental\x64\Debug\Car_Rental.exe
